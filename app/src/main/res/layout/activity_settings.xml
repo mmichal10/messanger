@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.michal.komunikator.Settings">
+
+    <EditText
+        android:id="@+id/ipEditText"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:textColorHint="#B2B2B2"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="16dp" />
+
+    <Button
+        android:id="@+id/ipButton"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:onClick="changeServerIp"
+        android:text="Zapisz nowe IP"
+        tools:layout_editor_absoluteX="85dp"
+        tools:layout_editor_absoluteY="70dp" />
+
+    <EditText
+        android:id="@+id/senderEditText"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:textColorHint="#B2B2B2"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="138dp" />
+
+    <Button
+        android:id="@+id/senderButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="changeSenderName"
+        android:text="Zapisz nowa nazwe"
+        tools:layout_editor_absoluteX="75dp"
+        tools:layout_editor_absoluteY="192dp" />
+
+    <EditText
+        android:id="@+id/receiverEditText"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:textColorHint="#B2B2B2"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="262dp" />
+
+    <Button
+        android:id="@+id/receiverButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="changeReceiverName"
+        android:text="Zapisz nowego odbiorce"
+        tools:layout_editor_absoluteX="90dp"
+        tools:layout_editor_absoluteY="322dp" />
+
+</LinearLayout>
