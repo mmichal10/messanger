@@ -17,6 +17,7 @@ import com.example.michal.komunikator.R;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -25,32 +26,30 @@ import java.util.List;
 
 public class GestureListAdapter extends ArrayAdapter<Gesture> implements Filterable {
 
-    private int layoutResource;
-    private Context context = null;
-    private List<Gesture> gesturesList = null;
-    private List<Gesture> filteredGesturesList = null;
-    private List<String> categoriesList = null;
-    private Filter gesturesFilter = new GesturesFilter();
+    private int mLayoutResource;
+    private Context mContext = null;
+    private List<Gesture> mGesturesList = null;
+    private List<Gesture> mFilteredGesturesList = null;
+    private Filter mGesturesFilter = new GesturesFilter();
 
 
     public GestureListAdapter(Context context, int resource, List<Gesture> objects) {
         super(context, resource, objects);
-        this.layoutResource = resource;
-        gesturesList = objects;
-        filteredGesturesList = objects;
-        categoriesList = new ArrayList<>();
-        this.context = context;
+        this.mLayoutResource = resource;
+        mGesturesList = objects;
+        mFilteredGesturesList = objects;
+        this.mContext = context;
     }
 
 
     @Override
     public int getCount(){
-        return filteredGesturesList.size();
+        return mFilteredGesturesList.size();
     }
 
     @Override
     public Gesture getItem(int position){
-        return filteredGesturesList.get(position);
+        return mFilteredGesturesList.get(position);
     }
 
     @Override
@@ -60,7 +59,7 @@ public class GestureListAdapter extends ArrayAdapter<Gesture> implements Filtera
 
     @Override
     public Filter getFilter(){
-        return gesturesFilter;
+        return mGesturesFilter;
     }
 
     @Override
@@ -77,7 +76,7 @@ public class GestureListAdapter extends ArrayAdapter<Gesture> implements Filtera
 
         if (v == null) {
             LayoutInflater vi =  LayoutInflater.from(getContext());
-            v = vi.inflate(layoutResource, null);
+            v = vi.inflate(mLayoutResource, null);
         }
 
         TextView name = (TextView) v.findViewById(R.id.gestureName);
@@ -95,21 +94,19 @@ public class GestureListAdapter extends ArrayAdapter<Gesture> implements Filtera
 
 
         v.setOnClickListener(new View.OnClickListener(){
-
             @Override
             public void onClick(View v){
-
                 String name = ((TextView)v.findViewById(R.id.gestureName)).getText().toString();
 
-                Gesture clickedGesture = null;
-                for(Gesture g : gesturesList){
-                    if(g.getName().contains(name)){
-                        clickedGesture = g;
+                Iterator<Gesture> it = mGesturesList.iterator();
+                while(it.hasNext()){
+                    Gesture g = it.next();
+                    if(g.getName().contains(name)) {
+                        ((GalleryActivity) mContext).addGestureToMessege(g);
+                        Log.i("GestureListAdapter", "Message extended by " + g.getName() + " gesture");
                         break;
                     }
                 }
-                ((GalleryActivity)context).addGestureToMessege(clickedGesture);
-                Log.i("GestureListAdapter", "Message extended by " + clickedGesture.getName() + " gesture");
             }
         } );
 
@@ -122,11 +119,11 @@ public class GestureListAdapter extends ArrayAdapter<Gesture> implements Filtera
         protected FilterResults performFiltering(CharSequence constraint) {
             FilterResults results = new FilterResults();
 
-            List<Gesture> filteredList = new ArrayList<Gesture>();
+            List<Gesture> filteredList = new ArrayList<>();
 
             constraint = constraint.toString().toLowerCase();
 
-            for(Gesture g : gesturesList)
+            for(Gesture g : mGesturesList)
                 if(g.getName().toLowerCase().contains(constraint))
                     filteredList.add(g);
 
@@ -138,7 +135,7 @@ public class GestureListAdapter extends ArrayAdapter<Gesture> implements Filtera
 
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {
-            filteredGesturesList = (ArrayList<Gesture>) results.values;
+            mFilteredGesturesList = (ArrayList<Gesture>) results.values;
             notifyDataSetChanged();
         }
     }

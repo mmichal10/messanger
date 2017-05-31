@@ -30,23 +30,22 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import static android.provider.ContactsContract.CommonDataKinds.StructuredName.PREFIX;
 
 public class MessengerActivity extends FragmentActivity{
 
-    static final int CHOOSEN_GESTURES_LIST_REQUEST = 1;
     private boolean mListen = true;
 
+    private ArrayList<Gesture> mNewMessageList = new ArrayList<>();
+    private RecyclerView mNewMessageView;
+    private MessageAdapter mNewMessageAdapter;
 
-    private ArrayList<Gesture> messageList = null;
-    private RecyclerView newMessage = null;
-    private MessageAdapter adapter = null;
-    private RecyclerView.LayoutManager layoutManager = null;
+    private ArrayList<ArrayList<Gesture>> mChatList = new ArrayList<>();;
 
-    private ArrayList<ArrayList<Gesture>> chatList = null;
-
-    private  String responseFromServer = "";
+    private  String mResponseFromServer = "";
 
     private SharedPreferences mSettings = null;
     private String mSender = null;
@@ -58,15 +57,14 @@ public class MessengerActivity extends FragmentActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messenger);
-        messageList = new ArrayList<>();
-        chatList = new ArrayList<>();
 
-        newMessage = (RecyclerView)findViewById(R.id.newMessage);
+        mNewMessageView = (RecyclerView)findViewById(R.id.newMessage);
+        mNewMessageAdapter = new MessageAdapter(this, mNewMessageList);
 
-        layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        newMessage.setLayoutManager(layoutManager);
-        adapter = new MessageAdapter(this, messageList);
-        newMessage.setAdapter(adapter);
+        RecyclerView.LayoutManager newMessageLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        mNewMessageView.setLayoutManager(newMessageLayoutManager);
+
+        mNewMessageView.setAdapter(mNewMessageAdapter);
     }
 
     @Override
@@ -89,7 +87,7 @@ public class MessengerActivity extends FragmentActivity{
 
     public void createMessage(View view){
         Intent i = new Intent(this, GalleryActivity.class);
-        startActivityForResult(i, CHOOSEN_GESTURES_LIST_REQUEST);
+        startActivityForResult(i, Constants.CHOOSEN_GESTURES_LIST_REQUEST);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
@@ -97,55 +95,36 @@ public class MessengerActivity extends FragmentActivity{
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CHOOSEN_GESTURES_LIST_REQUEST) {
-            ArrayList<String> tmpList = new ArrayList<>();
+        if (requestCode == Constants.CHOOSEN_GESTURES_LIST_REQUEST) {
+            ArrayList<String> tmpList;
             tmpList = data.getStringArrayListExtra("MESSAGE");
             Log.i("MessengerActivity", "Created message's length is " + Integer.toString(tmpList.size()));
 
-            messageList = findDrawablesByName(tmpList);
-            adapter = new MessageAdapter(this, messageList);
-            newMessage.setAdapter(adapter);
+            mNewMessageList = Gesture.findDrawableByName(tmpList);
+            mNewMessageAdapter = new MessageAdapter(this, mNewMessageList);
+            mNewMessageView.setAdapter(mNewMessageAdapter);
         }
-    }
-
-    private ArrayList<Gesture> findDrawablesByName (ArrayList<String> gesturesNames){
-        ArrayList<Gesture> result = new ArrayList<>();
-        for (String fileName: gesturesNames) {
-            Field field = null;
-            try {
-                field = R.drawable.class.getField(fileName);
-                int id = field.getInt(null);
-                String name = fileName.substring((PREFIX.length()));
-                String category = name.substring(name.indexOf("_") + 1);
-                name = name.substring(0, name.indexOf("_"));
-                Drawable drawable =  ResourcesCompat.getDrawable(getResources(), id, null);
-                result.add(new Gesture(fileName, name, drawable, id, category));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
     }
 
     private void addMessageToConversation(ArrayList<Gesture> message){
-        chatList.add(message);
+        mChatList.add(message);
         ListView chatListView = (ListView)findViewById(R.id.chatListView);
-        ChatListViewAdapter adapter = new ChatListViewAdapter(this, R.layout.chat_message_layout, chatList);
+        ChatListViewAdapter adapter = new ChatListViewAdapter(this, R.layout.chat_message_layout, mChatList);
         chatListView.setAdapter(adapter);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.GINGERBREAD)
     public void sendMessage(View view) throws UnsupportedEncodingException {
-       addMessageToConversation(messageList);
+       addMessageToConversation(mNewMessageList);
 
-        Message msg = new Message(mSender, messageList);
+        Message msg = new Message(mSender, mNewMessageList);
         Gson gson = new GsonBuilder().create();
         String jsonString = gson.toJson(msg);
         jsonString = URLEncoder.encode(jsonString, "utf-8");
 
-        messageList = new ArrayList<>();
-        this.adapter = new MessageAdapter(this, messageList);
-        newMessage.setAdapter(this.adapter);
+        mNewMessageList = new ArrayList<>();
+        this.mNewMessageAdapter = new MessageAdapter(this, mNewMessageList);
+        mNewMessageView.setAdapter(this.mNewMessageAdapter);
 
         httpRequest("message=" + jsonString, mReceiver);
     }
@@ -166,7 +145,7 @@ public class MessengerActivity extends FragmentActivity{
                                 Log.i("checkForMessages", request);
                                 Gson gson = new Gson();
                                 Message msg = gson.fromJson(request, Message.class);
-                                addMessageToConversation(findDrawablesByName(msg.getMessage()));
+                                addMessageToConversation(Gesture.findDrawableByName(msg.getMessage()));
                             }
                         }
                     });
@@ -191,18 +170,18 @@ public class MessengerActivity extends FragmentActivity{
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        responseFromServer = response;
+                        mResponseFromServer = response;
                         Log.i("responseFromServer", response);
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.i("httpRequest", "Cannot connect to server");
-                responseFromServer = "";
+                mResponseFromServer = "";
             }
         });
         queue.add(stringRequest);
-        return responseFromServer;
+        return mResponseFromServer;
     }
 
 }

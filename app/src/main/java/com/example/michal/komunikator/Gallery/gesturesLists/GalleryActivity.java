@@ -1,6 +1,9 @@
 package com.example.michal.komunikator.Gallery.gesturesLists;
 
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
@@ -14,65 +17,59 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
 
+import com.example.michal.komunikator.Constants;
 import com.example.michal.komunikator.Gesture;
 import com.example.michal.komunikator.Gallery.gesturesLists.byName.GesturesByNameFragment;
 import com.example.michal.komunikator.Gallery.gesturesLists.bySections.GestureBySectionsFragment;
 import com.example.michal.komunikator.R;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class GalleryActivity extends FragmentActivity {
 
-
-    private static final String PREFIX = "makaton_";
-    static final int CHOOSEN_GESTURES_LIST_REQUEST = 1;
-
-
-    private ArrayList<Gesture> gesturesList = null;
-    private ArrayList<String> sectionsList = null;
-    private EditText finder = null;
-    private GesturesByNameFragment lexigraphicalFragment = null;
-    private GestureBySectionsFragment sectionsFragment = null;
-    private FrameLayout fragmentContainer = null;
-    private Spinner orderSpinner = null;
-    private ArrayList<String> messageList = null;
+    private ArrayList<Gesture> mGesturesList = null;
+    private ArrayList<String> mSectionsList = null;
+    private EditText mFinder = null;
+    private GesturesByNameFragment mLexigraphicalFragment = null;
+    private GestureBySectionsFragment mSectionsFragment = null;
+    private FrameLayout mFragmentContainer = null;
+    private Spinner mOrderSpinner = null;
+    private ArrayList<String> mMessageList = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
-        fragmentContainer = (FrameLayout)findViewById(R.id.fragmentFrame);
+        mFragmentContainer = (FrameLayout)findViewById(R.id.fragmentFrame);
 
         readDrawable();
         setContent();
-
     }
 
     private void readDrawable(){
-        gesturesList = new ArrayList<>();
-        sectionsList = new ArrayList<>();
+        mGesturesList = new ArrayList<>();
+        mSectionsList = new ArrayList<>();
 
+        ArrayList<Field> idFields = new ArrayList<>(Arrays.asList(R.drawable.class.getFields()));
 
-        Field[] ID_Fields = R.drawable.class.getFields();
-        for(Field field : ID_Fields) {
+        for(Field field : idFields) {
             String fileName = field.getName();
-            if (fileName.startsWith(PREFIX))
+            if (fileName.startsWith(Constants.PREFIX))
                 try {
                     int id = field.getInt(null);
-                    //zakładam, że nazwa obrazka to PREFIX_NAZWA_KATEGORIA
-                    //najpierw pozbywam sie prefiksu
-                    String name = fileName.substring((PREFIX.length()));
-                    //wyłuskuję kategorię
-                    String category = name.substring(name.indexOf("_") + 1);
-                    //i pozbywam się się kategorii z nazwy
-                    name = name.substring(0, name.indexOf("_"));
-                    Drawable drawable = ResourcesCompat.getDrawable(getResources(), id, null);
+                    Gesture g = new Gesture(fileName, id);
+                    mGesturesList.add(g);
 
-                    if (!sectionsList.contains(category))
-                        sectionsList.add(category);
+                    if (!mSectionsList.contains(g.getCategory()))
+                        mSectionsList.add(g.getCategory());
 
-                    gesturesList.add(new Gesture(fileName, name, drawable, id, category));
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
@@ -80,33 +77,33 @@ public class GalleryActivity extends FragmentActivity {
     }
 
     private void setContent(){
-        messageList = new ArrayList<>();
+        mMessageList = new ArrayList<>();
 
         Bundle args = new Bundle();
-        args.putParcelableArrayList("gestures", gesturesList);
-        lexigraphicalFragment = new GesturesByNameFragment();
-        lexigraphicalFragment.setArguments(args);
+        args.putParcelableArrayList("gestures", mGesturesList);
+        mLexigraphicalFragment = new GesturesByNameFragment();
+        mLexigraphicalFragment.setArguments(args);
 
-        args.putStringArrayList("sections", sectionsList);
-        sectionsFragment = new GestureBySectionsFragment();
-        sectionsFragment.setArguments(args);
+        args.putStringArrayList("sections", mSectionsList);
+        mSectionsFragment = new GestureBySectionsFragment();
+        mSectionsFragment.setArguments(args);
 
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragmentFrame, lexigraphicalFragment).commit();
+                .add(R.id.fragmentFrame, mLexigraphicalFragment).commit();
 
-        finder = (EditText)findViewById(R.id.findField);
-        finder.addTextChangedListener(searchWatecher);
+        mFinder = (EditText)findViewById(R.id.findField);
+        mFinder.addTextChangedListener(searchWatecher);
 
-        orderSpinner = (Spinner)findViewById(R.id.spinner);
-        orderSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        mOrderSpinner = (Spinner)findViewById(R.id.spinner);
+        mOrderSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
                 if(id == 0)
-                    transaction.replace(R.id.fragmentFrame, lexigraphicalFragment);
+                    transaction.replace(R.id.fragmentFrame, mLexigraphicalFragment);
                 else if(id == 1)
-                    transaction.replace(R.id.fragmentFrame, sectionsFragment);
-                finder.setText("");
+                    transaction.replace(R.id.fragmentFrame, mSectionsFragment);
+                mFinder.setText("");
                 transaction.commit();
             }
 
@@ -120,7 +117,7 @@ public class GalleryActivity extends FragmentActivity {
     private final TextWatcher searchWatecher = new TextWatcher() {
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-            lexigraphicalFragment.getFilter().filter(s.toString());
+            mLexigraphicalFragment.getFilter().filter(s.toString());
         }
 
         @Override
@@ -132,13 +129,13 @@ public class GalleryActivity extends FragmentActivity {
     @Override
     public void onBackPressed() {
         Intent intent = new Intent();
-        intent.putStringArrayListExtra("MESSAGE", messageList);
-        setResult(CHOOSEN_GESTURES_LIST_REQUEST, intent);
+        intent.putStringArrayListExtra("MESSAGE", mMessageList);
+        setResult(Constants.CHOOSEN_GESTURES_LIST_REQUEST, intent);
         finish();
     }
 
     public void addGestureToMessege(Gesture g){
-        messageList.add(g.getFileName());
+        mMessageList.add(g.getFileName());
     }
 
 }

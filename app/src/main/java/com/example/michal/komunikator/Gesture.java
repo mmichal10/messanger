@@ -1,5 +1,6 @@
 package com.example.michal.komunikator;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -7,10 +8,15 @@ import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.RequiresApi;
+import android.support.v4.content.res.ResourcesCompat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Comparator;
+
+import static android.R.attr.id;
 
 /**
  * Created by michal on 10.04.2017.
@@ -18,47 +24,54 @@ import java.util.Comparator;
 
 public class Gesture implements Parcelable {
 
-    private int id = -1;
-    private String fileName = null;
-    private String name = null;
-    private Drawable pic = null;
-    private String category = "not assigned";
+    private static final int CATEGORY = 1;
+    private static final int NAME = 2;
 
-    public Gesture(String fileName, String name, Drawable pic, int id, String category){
-        this.name = name;
-        this.pic = pic;
-        this.category = category;
-        this.id = id;
-        this.fileName = fileName;
+    private int mId = -1;
+    private String mFileName = null;
+
+    public Gesture(String fileName, int id){
+        this.mId = id;
+        this.mFileName = fileName;
     }
 
     public Gesture(Parcel in){
-        this.id = in.readInt();
-        this.name = in.readString();
-        this.category = in.readString();
-        this.pic = (Drawable) in.readValue(getClass().getClassLoader());
-        this.fileName = in.readString();
+        this.mId = in.readInt();
+        this.mFileName = in.readString();
     }
 
 
-    public void setName(String name){
-        this.name = name;
+    private String getFileNamePart(int part){
+        //nazwa obrazka ma format prefiks_nazwa_kategoria
+        //ta funkcja ma wyłuskać, to co potrzebne w danym momencie
+        String name = mFileName.substring((Constants.PREFIX.length()));
+
+        String category = name.substring(name.indexOf("_") + 1);
+        name = name.substring(0, name.indexOf("_"));
+        switch (part){
+            case NAME:
+                return name;
+            case CATEGORY:
+                return category;
+            default:
+                return "Default Name";
+        }
     }
 
     public String getName(){
-        return name;
+        return getFileNamePart(NAME);
     }
 
     public Drawable getSymbol() {
-        return pic;
+        return ResourcesCompat.getDrawable(App.context().getResources(), mId, null);
     }
 
     public String getCategory(){
-        return category;
+        return getFileNamePart(CATEGORY);
     }
 
     public String getFileName(){
-        return  fileName;
+        return  mFileName;
     }
 
     public static class GestureNameComparator implements Comparator<Gesture> {
@@ -69,6 +82,11 @@ public class Gesture implements Parcelable {
         }
     }
 
+    @Override
+    public String toString(){
+        return this.mFileName;
+    }
+
     //two methods from Parcelable interface
     @Override
     public int describeContents() {
@@ -77,11 +95,8 @@ public class Gesture implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(this.id);
-        dest.writeString(this.name);
-        dest.writeString(this.category);
-        Bitmap bitmap = ((BitmapDrawable) this.pic).getBitmap();
-        dest.writeParcelable(bitmap, flags);
+        dest.writeInt(this.mId);
+        dest.writeString(this.mFileName);
     }
 
     public static final Parcelable.Creator CREATOR = new Parcelable.Creator(){
@@ -94,9 +109,22 @@ public class Gesture implements Parcelable {
         }
     };
 
-    @Override
-    public String toString(){
-        return this.fileName;
+    public static ArrayList<Gesture> findDrawableByName(ArrayList<String> gesturesNames){
+        ArrayList<Gesture> result = new ArrayList<>();
+
+        for (String fileName: gesturesNames) {
+            Field field;
+            try {
+                field = R.drawable.class.getField(fileName);
+                int id = field.getInt(null);
+                result.add(new Gesture(fileName, id));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
+
+
 
 }

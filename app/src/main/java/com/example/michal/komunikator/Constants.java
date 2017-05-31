@@ -6,6 +6,9 @@ package com.example.michal.komunikator;
 
 public class Constants {
 
+    public static final String PREFIX = "makaton_";
+    public static final int CHOOSEN_GESTURES_LIST_REQUEST = 1;
+
     public static final String SHARED_PREFERENCES_NAME = "MessangerData";
     public static final String RECEIVER_NAME_ID  = "receiverName";
     public static final String SENDER_NAME_ID = "senderName";

@@ -16,8 +16,8 @@ import java.util.ArrayList;
 
 public class GesturesByNameFragment extends Fragment {
 
-    private ArrayList<Gesture> gesturesList = null;
-    private GestureListAdapter adapter = null;
+    private ArrayList<Gesture> mGesturesList = null;
+    private GestureListAdapter mAdapter = null;
 
     public GesturesByNameFragment() {
     }
@@ -27,7 +27,7 @@ public class GesturesByNameFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_gestures_by_name, container, false);
 
         Bundle arguments = getArguments();
-        this.gesturesList = arguments.getParcelableArrayList("gestures");
+        this.mGesturesList = arguments.getParcelableArrayList("gestures");
 
         return view;
     }
@@ -38,13 +38,13 @@ public class GesturesByNameFragment extends Fragment {
 
         ListView listView = (ListView)this.getView().findViewById(R.id.gesturesListByName);
 
-        adapter = new GestureListAdapter(getContext(), R.layout.list_element_layout, gesturesList);
+        mAdapter = new GestureListAdapter(getContext(), R.layout.list_element_layout, mGesturesList);
 
-        listView.setAdapter(adapter);
+        listView.setAdapter(mAdapter);
     }
 
     public Filter getFilter(){
-        return adapter.getFilter();
+        return mAdapter.getFilter();
     }
 
 }

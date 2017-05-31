@@ -20,9 +20,9 @@ import java.util.ArrayList;
 
 public class GestureBySectionsFragment extends Fragment {
 
-    private ArrayList<Gesture> gesturesList = null;
-    private ArrayList<String> sectionsList = null;
-    private GestureExpandablelistAdapter adapter = null;
+    private ArrayList<Gesture> mGesturesList = null;
+    private ArrayList<String> mSectionsList = null;
+    private GestureExpandablelistAdapter mAdapter = null;
 
     @Nullable
     @Override
@@ -30,8 +30,8 @@ public class GestureBySectionsFragment extends Fragment {
         View view = inflater.inflate(R.layout.list_separator, container, false);
 
         Bundle arguments = getArguments();
-        this.gesturesList = arguments.getParcelableArrayList("gestures");
-        this.sectionsList = arguments.getStringArrayList("sections");
+        this.mGesturesList = arguments.getParcelableArrayList("gestures");
+        this.mSectionsList = arguments.getStringArrayList("sections");
 
         return view;
     }
@@ -40,12 +40,12 @@ public class GestureBySectionsFragment extends Fragment {
     public void onStart() {
         super.onStart();
         ExpandableListView elv = (ExpandableListView)this.getView().findViewById(R.id.expandableSections);
-        adapter = new GestureExpandablelistAdapter(this.getContext(), sectionsList, gesturesList);
+        mAdapter = new GestureExpandablelistAdapter(this.getContext(), mSectionsList, mGesturesList);
 
-        elv.setAdapter(adapter);
+        elv.setAdapter(mAdapter);
     }
 
     public Filter getFilter(){
-        return adapter.getFilter();
+        return mAdapter.getFilter();
     }
 }
